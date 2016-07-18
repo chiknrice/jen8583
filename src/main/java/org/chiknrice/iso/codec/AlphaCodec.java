@@ -24,6 +24,7 @@ import org.chiknrice.iso.ConfigException;
 import org.chiknrice.iso.config.ComponentDef.Encoding;
 import org.chiknrice.iso.util.EqualsBuilder;
 import org.chiknrice.iso.util.Hash;
+import org.chiknrice.iso.util.Hex;
 
 /**
  * A codec implementation for alphanumeric fields. The only supported character set is ISO 8859-1 (single byte character
@@ -39,12 +40,13 @@ public final class AlphaCodec implements Codec<String> {
     private final Boolean trim;
     private final Boolean leftJustified;
     private final Integer fixedLength;
+    private final Encoding encoding;
 
-    public AlphaCodec(Boolean trim) {
-        this(trim, null, null);
+    public AlphaCodec(Boolean trim, Encoding encoding) {
+        this(trim, null, null, encoding);
     }
 
-    public AlphaCodec(Boolean trim, Boolean leftJustified, Integer fixedLength) {
+    public AlphaCodec(Boolean trim, Boolean leftJustified, Integer fixedLength, Encoding encoding) {
         this.charset = StandardCharsets.ISO_8859_1;
         this.trim = trim;
         if (fixedLength != null && leftJustified == null) {
@@ -52,11 +54,16 @@ public final class AlphaCodec implements Codec<String> {
         }
         this.leftJustified = leftJustified;
         this.fixedLength = fixedLength;
+        this.encoding=encoding;
     }
 
     public String decode(ByteBuffer buf) {
         byte[] bytes = new byte[fixedLength != null ? fixedLength : buf.limit() - buf.position()];
         buf.get(bytes);
+        if (encoding == Encoding.BCDF) {
+            String value = Hex.encode(bytes);
+            return trimTrailingCharacter(value, 'F');
+        }
         String value = new String(bytes, charset != null ? charset : StandardCharsets.ISO_8859_1);
         return trim ? value.trim() : value;
     }
@@ -71,12 +78,20 @@ public final class AlphaCodec implements Codec<String> {
                 stringValue = String.format("%" + (leftJustified ? "-" : "") + fixedLength + "s", stringValue);
             }
         }
+        if (encoding == Encoding.BCDF) {
+            trimTrailingCharacter(stringValue, 'F');
+        }
+
         buf.put(stringValue.getBytes(charset != null ? charset : StandardCharsets.ISO_8859_1));
     }
 
+    /**
+     * For some weird reason this doesn't work if we return the actual encoding and is hard set to CHAR with the
+     * exception of BCDF which we need to correctly return.
+     */
     @Override
     public Encoding getEncoding() {
-        return Encoding.CHAR;
+        return encoding == Encoding.BCDF ? Encoding.BCDF : Encoding.CHAR;
     }
 
     @Override
@@ -96,6 +111,27 @@ public final class AlphaCodec implements Codec<String> {
             AlphaCodec other = (AlphaCodec) o;
             return EqualsBuilder.newInstance(other.charset, charset).append(other.trim, trim)
                     .append(other.leftJustified, leftJustified).append(other.fixedLength, fixedLength).isEqual();
+        }
+    }
+
+    /**
+     * Taken from the code of the person who originally added these changes...
+     *
+     * @param str
+     * @param trailingCharacter
+     * @return
+     */
+    private String trimTrailingCharacter(String str, char trailingCharacter) {
+        if(str != null && str.length() > 0) {
+            StringBuilder sb = new StringBuilder(str);
+
+            while(sb.length() > 0 && sb.charAt(sb.length() - 1) == trailingCharacter) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+
+            return sb.toString();
+        } else {
+            return str;
         }
     }
 

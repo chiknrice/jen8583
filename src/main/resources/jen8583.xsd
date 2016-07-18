@@ -168,6 +168,7 @@
             <extension base="tns:alpha">
                 <attributeGroup ref="tns:variable-length" />
                 <attributeGroup ref="tns:optional-member" />
+                <attribute name="encoding" type="tns:numeric-encoding" use="optional" />
             </extension>
         </complexContent>
     </complexType>
@@ -288,6 +289,7 @@
             <enumeration value="CHAR"></enumeration>
             <enumeration value="BINARY"></enumeration>
             <enumeration value="BCD"></enumeration>
+            <enumeration value="BCDF"></enumeration>
         </restriction>
     </simpleType>
 

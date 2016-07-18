@@ -271,10 +271,10 @@ public final class IsoMessageDef {
                 codec = new CompositeCodec(buildFixedComponents(e));
                 break;
             case "alpha":
-                codec = new AlphaCodec(getTrim(e), getLeftJustified(e), Integer.valueOf(e.getAttribute("length")));
+                codec = new AlphaCodec(getTrim(e), getLeftJustified(e), Integer.valueOf(e.getAttribute("length")), Encoding.BCD);
                 break;
             case "alpha-var":
-                codec = new VarCodec<>(new AlphaCodec(getTrim(e)), buildVarLengthCodec(e));
+                codec = new VarCodec<>(new AlphaCodec(getTrim(e), getEncoding(e, "encoding", defaultNumericEncoding)), buildVarLengthCodec(e));
                 break;
             case "numeric":
                 codec = new NumericCodec(getEncoding(e, "encoding", defaultNumericEncoding), Integer.valueOf(e

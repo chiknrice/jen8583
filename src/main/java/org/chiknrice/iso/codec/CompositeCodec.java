@@ -72,18 +72,19 @@ public final class CompositeCodec implements Codec<Map<Integer, Object>> {
             }
 
             ByteBuffer valueBuf;
-            if (def.getCodec() instanceof VarCodec) {
-                int varLength = ((VarCodec<?>) def.getCodec()).getLengthCodec().decode(buf).intValue();
-                int limit = def.getCodec().getEncoding() == Encoding.BCD ? varLength / 2 + varLength % 2 : varLength;
-                valueBuf = buf.slice();
-                valueBuf.limit(limit);
-                buf.position(buf.position() + limit);
-            } else {
-                valueBuf = buf;
-            }
-
             Object value;
             try {
+                if (def.getCodec() instanceof VarCodec) {
+                    int varLength = ((VarCodec<?>) def.getCodec()).getLengthCodec().decode(buf).intValue();
+                    int limit = (def.getCodec().getEncoding() == Encoding.BCD || def.getCodec().getEncoding() == Encoding.BCDF)
+                            ? varLength / 2 + varLength % 2 : varLength;
+                    valueBuf = buf.slice();
+                    valueBuf.limit(limit);
+                    buf.position(buf.position() + limit);
+                } else {
+                    valueBuf = buf;
+                }
+
                 value = def.getCodec().decode(valueBuf);
             } catch (Exception e) {
                 if (e instanceof CodecException) {
@@ -124,15 +125,15 @@ public final class CompositeCodec implements Codec<Map<Integer, Object>> {
             }
 
             ByteBuffer valueBuf;
-            if (def.getCodec() instanceof VarCodec) {
-                buf.mark();
-                ((VarCodec<?>) def.getCodec()).getLengthCodec().encode(buf, 0);
-                valueBuf = buf.slice();
-            } else {
-                valueBuf = buf;
-            }
 
             try {
+                if (def.getCodec() instanceof VarCodec) {
+                    buf.mark();
+                    ((VarCodec<?>) def.getCodec()).getLengthCodec().encode(buf, 0);
+                    valueBuf = buf.slice();
+                } else {
+                    valueBuf = buf;
+                }
                 def.getCodec().encode(valueBuf, value);
             } catch (Exception e) {
                 if (e instanceof CodecException) {

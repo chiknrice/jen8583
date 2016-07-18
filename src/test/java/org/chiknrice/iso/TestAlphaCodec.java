@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import org.chiknrice.iso.codec.AlphaCodec;
+import org.chiknrice.iso.config.ComponentDef;
 import org.junit.Test;
 
 /**
@@ -31,7 +32,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testSimpleEncode() {
-        AlphaCodec codec = new AlphaCodec(false);
+        AlphaCodec codec = new AlphaCodec(false, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "abc");
         byte[] bytes = buf.array();
@@ -41,7 +42,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testEncodeSpecialChar() {
-        AlphaCodec codec = new AlphaCodec(false);
+        AlphaCodec codec = new AlphaCodec(false, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "ü");
         byte[] bytes = buf.array();
@@ -51,7 +52,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testEncodeSpecialCharPadded() {
-        AlphaCodec codec = new AlphaCodec(false, true, 3);
+        AlphaCodec codec = new AlphaCodec(false, true, 3, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "ü");
         byte[] bytes = buf.array();
@@ -61,12 +62,12 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test(expected = ConfigException.class)
     public void testInsufficientConstructorArgs() {
-        new AlphaCodec(true, null, 9);
+        new AlphaCodec(true, null, 9, ComponentDef.Encoding.BCD);
     }
 
     @Test
     public void testPadding() {
-        AlphaCodec codec = new AlphaCodec(true, false, 9);
+        AlphaCodec codec = new AlphaCodec(true, false, 9, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "abc");
         byte[] bytes = buf.array();
@@ -76,14 +77,14 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test(expected = CodecException.class)
     public void testExceedFixedLength() {
-        AlphaCodec codec = new AlphaCodec(true, false, 4);
+        AlphaCodec codec = new AlphaCodec(true, false, 4, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "abcdef");
     }
 
     @Test
     public void testJustified() {
-        AlphaCodec codec = new AlphaCodec(true, true, 9);
+        AlphaCodec codec = new AlphaCodec(true, true, 9, ComponentDef.Encoding.BCD);
         ByteBuffer buf = ByteBuffer.allocate(20);
         codec.encode(buf, "abc");
         byte[] bytes = buf.array();
@@ -93,7 +94,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testDecode() {
-        AlphaCodec codec = new AlphaCodec(false);
+        AlphaCodec codec = new AlphaCodec(false, ComponentDef.Encoding.BCD);
         byte[] bytes = new byte[] { 0x31, 0x32, 0x33 };
         String decoded = codec.decode(ByteBuffer.wrap(bytes));
         assertEquals("123", decoded);
@@ -101,7 +102,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testDecodeSpecialChar() {
-        AlphaCodec codec = new AlphaCodec(false);
+        AlphaCodec codec = new AlphaCodec(false, ComponentDef.Encoding.BCD);
         byte[] bytes = new byte[] { (byte) 0xfc };
         String decoded = codec.decode(ByteBuffer.wrap(bytes));
         assertEquals("ü", decoded);
@@ -109,7 +110,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testDecodeSpecialCharNoTrim() {
-        AlphaCodec codec = new AlphaCodec(false);
+        AlphaCodec codec = new AlphaCodec(false, ComponentDef.Encoding.BCD);
         byte[] bytes = new byte[] { 0x20, (byte) 0xfc, 0x20, 0x20, 0x20 };
         String decoded = codec.decode(ByteBuffer.wrap(bytes));
         assertEquals(" ü   ", decoded);
@@ -117,7 +118,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testDecodeSpecialCharTrim() {
-        AlphaCodec codec = new AlphaCodec(true);
+        AlphaCodec codec = new AlphaCodec(true, ComponentDef.Encoding.BCD);
         byte[] bytes = new byte[] { 0x20, (byte) 0xfc, 0x20, 0x20, 0x20 };
         String decoded = codec.decode(ByteBuffer.wrap(bytes));
         assertEquals("ü", decoded);
@@ -125,7 +126,7 @@ public class TestAlphaCodec extends BaseTest {
 
     @Test
     public void testDecodeSpecialCharFixedLength() {
-        AlphaCodec codec = new AlphaCodec(false, false, 3);
+        AlphaCodec codec = new AlphaCodec(false, false, 3, ComponentDef.Encoding.BCD);
         byte[] bytes = new byte[] { 0x20, (byte) 0xfc, 0x20, 0x20, 0x20 };
         String decoded = codec.decode(ByteBuffer.wrap(bytes));
         assertEquals(" ü ", decoded);
